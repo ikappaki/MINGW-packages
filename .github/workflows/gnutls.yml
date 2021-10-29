@@ -31,6 +31,6 @@ jobs:
         run: |
           cd /C/_
           cd mingw-w64-gnutls
-          MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s
+          MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s --noconfirm
 
           
