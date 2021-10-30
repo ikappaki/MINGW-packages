@@ -19,7 +19,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          # install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain
+          install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain
           update: true
 
 
@@ -29,15 +29,15 @@ jobs:
           msys2 -c 'gpg --keyserver keyserver.ubuntu.com --recv-keys D605848ED7E69871'
           msys2 -c 'gpg --list-keys'
           
-      # - name: Move Checkout
-      #   run: |
-      #     Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
+      - name: Move Checkout
+        run: |
+          Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
 
-      # - name: test
-      #   shell: msys2 {0}
-      #   run: |
-      #     cd /C/_
-      #     cd mingw-w64-gnutls
-      #     MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s --noconfirm
+      - name: test
+        shell: msys2 {0}
+        run: |
+          cd /C/_
+          cd mingw-w64-gnutls
+          MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s --noconfirm
 
           
