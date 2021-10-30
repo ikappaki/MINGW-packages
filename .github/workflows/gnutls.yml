@@ -11,12 +11,14 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           path: temp
           fetch-depth: 0
 
 
       - uses: msys2/setup-msys2@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           msystem: ${{ matrix.msystem }}
           install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-x86_64-gtk-doc
@@ -24,16 +26,19 @@ jobs:
 
 
       - name: add sig
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set MSYSTEM=MSYS
           msys2 -c 'gpg --keyserver keyserver.ubuntu.com --recv-keys D605848ED7E69871'
           msys2 -c 'gpg --list-keys'
           
       - name: Move Checkout
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
 
       - name: build gnutls
+        if: startsWith(github.ref, 'refs/tags/')
         shell: msys2 {0}
         run: |
           cd /C/_
@@ -42,6 +47,7 @@ jobs:
 
       - name: "Upload gnutls package to release"
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             C:/_/mingw-w64-gnutls/mingw-w64-x86_64-gnutls-3.6.15-1-any.pkg.tar.zst
