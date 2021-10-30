@@ -19,7 +19,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain gtk-doc mingw-w64-x86_64-gtk-doc
+          install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-x86_64-gtk-doc
           update: true
 
 
@@ -33,11 +33,17 @@ jobs:
         run: |
           Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
 
-      - name: test
+      - name: build gnutls
         shell: msys2 {0}
         run: |
           cd /C/_
           cd mingw-w64-gnutls
-          MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s --noconfirm
+          MINGW_INSTALLS=${{ matrix.msystem }} makepkg -s --noconfirm --nocheck
 
-          
+      - name: "Upload gnutls package"
+        uses: actions/upload-artifact@v2
+        with:
+          name: sources
+          path: |
+            C:/_/artifacts/mingw-w64-gnutls/mingw-w64-x86_64-gnutls-3.6.15-1-any.pkg.tar.zst
+            C:/_/artifacts/mingw-w64-gnutls/src/build-x86_64-w64-mingw32/lib/.libs/libgnutls-30.dll
