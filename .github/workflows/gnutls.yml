@@ -19,7 +19,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain gtk-doc
+          install: git base-devel mingw-w64-${{ matrix.arch }}-toolchain gtk-doc mingw-w64-x86_64-gtk-doc
           update: true
 
 
