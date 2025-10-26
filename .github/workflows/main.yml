@@ -100,6 +100,7 @@ jobs:
           pwd
           ls -al
           cd mingw-w64-llvm          
+          pacman -S mingw-w64-clang-x86_64-llvm --noconfirm
           makepkg-mingw -sLf --skipchecksums --skippgpcheck
           
           # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
