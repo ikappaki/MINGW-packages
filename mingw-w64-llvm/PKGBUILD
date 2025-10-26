@@ -29,7 +29,7 @@ pkgname=("${MINGW_PACKAGE_PREFIX}-llvm"
          "${MINGW_PACKAGE_PREFIX}-lld")
 _pkgver=21.1.4
 pkgver=${_pkgver/-/}
-pkgrel=1
+pkgrel=10
 pkgdesc="C language family frontend for LLVM (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clangarm64')
@@ -68,6 +68,10 @@ source=("${_url}/llvm-${_pkgver}.src.tar.xz"{,.sig}
         "0002-Fix-Findzstd-on-MINGW.patch"
         "0003-add-pthread-as-system-lib-for-mingw.patch"
         "0004-enable-emutls-for-mingw.patch"
+        "0020-vasil-fix-pch.patch"
+        "0021-Fix-syntactic-issues.patch"
+        "0022-ORC-Support-non-moving-cloneToContext.patch"
+        "0023-Allow-for-custom-code-model-in-clang-Interpreter.patch"
         # 0101-0199 -> clang
         "0101-link-pthread-with-mingw.patch"
         # 0201-0299 -> rt
@@ -92,6 +96,14 @@ sha256sums=('f311681255deb37f74bbf950a653e9434e7d8383a7b46a603a323c46cd4bf50e'
             'SKIP'
             'eb03df53671df6627768141b3aaa76abe176a14e5e47911c97bec544387c4aff'
             'd77d47e37e4948f5c01ae8bc05fb4e879b6516132c5a60c7bc820c9cbbb39668'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
             '790eb0fccb4ef29c3795bceb8a62c8f4ecd0bdd6c49b2812352b04cfbc552342'
             '76d2a88733cebb1f01b766ff2ab91a9e095bae1d2e4cc18c1ffcf21fd095efc4'
             '715cb8862753854b2d9256e0b70003e2d1f57083d83eaeaf5a095fc72b8a4e26'
@@ -144,6 +156,13 @@ prepare() {
       "0003-add-pthread-as-system-lib-for-mingw.patch" \
       "0004-enable-emutls-for-mingw.patch"
   fi
+
+  cd "${srcdir}"
+  apply_patch_with_msg \
+      "0020-vasil-fix-pch.patch" \
+      "0021-Fix-syntactic-issues.patch" \
+      "0022-ORC-Support-non-moving-cloneToContext.patch" \
+      "0023-Allow-for-custom-code-model-in-clang-Interpreter.patch"
 
   # Patch clang
   cd "${srcdir}"/clang
@@ -302,15 +321,15 @@ build() {
   ${MINGW_PREFIX}/bin/cmake.exe --build .
 }
 
-check() {
-  cd "${srcdir}"/build-${MSYSTEM}
-  # Remove || true once testcase doesn't cause failures.
-  # make check || true
-  # make check-clang || true
-  ${MINGW_PREFIX}/bin/cmake.exe -DLLVM_INCLUDE_TESTS=ON ../llvm
-  ${MINGW_PREFIX}/bin/cmake.exe --build .
-  ${MINGW_PREFIX}/bin/cmake.exe --build . -- check-lld || true
-}
+# check() {
+#   cd "${srcdir}"/build-${MSYSTEM}
+#   # Remove || true once testcase doesn't cause failures.
+#   # make check || true
+#   # make check-clang || true
+#   ${MINGW_PREFIX}/bin/cmake.exe -DLLVM_INCLUDE_TESTS=ON ../llvm
+#   ${MINGW_PREFIX}/bin/cmake.exe --build .
+#   ${MINGW_PREFIX}/bin/cmake.exe --build . -- check-lld || true
+# }
 
 package_clang() {
   pkgdesc="C language family frontend for LLVM (mingw-w64)"

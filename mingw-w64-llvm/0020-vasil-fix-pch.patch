@@ -1,0 +1,181 @@
+From 306ef834c83e358f3463a73dddacd1346864699e Mon Sep 17 00:00:00 2001
+From: Vassil Vassilev <v.g.vassilev@gmail.com>
+Date: Thu, 30 May 2024 05:05:41 +0000
+Subject: [PATCH 1/2] [clang-repl] Teach clang-repl how to load PCHs.
+
+---
+ clang/include/clang/CodeGen/ModuleBuilder.h |  6 ++++++
+ clang/lib/CodeGen/BackendConsumer.h         |  5 -----
+ clang/lib/CodeGen/CodeGenAction.cpp         | 13 +++++++------
+ clang/lib/CodeGen/ModuleBuilder.cpp         |  8 ++++++++
+ clang/lib/Interpreter/IncrementalParser.cpp |  4 ++++
+ clang/test/Interpreter/execute-pch.cpp      | 14 ++++++++++++++
+ 6 files changed, 39 insertions(+), 11 deletions(-)
+ create mode 100644 clang/test/Interpreter/execute-pch.cpp
+
+diff --git a/clang/include/clang/CodeGen/ModuleBuilder.h b/clang/include/clang/CodeGen/ModuleBuilder.h
+index 59b9840d02e08..f1b8229edd362 100644
+--- a/clang/include/clang/CodeGen/ModuleBuilder.h
++++ b/clang/include/clang/CodeGen/ModuleBuilder.h
+@@ -52,6 +52,12 @@ namespace CodeGen {
+ class CodeGenerator : public ASTConsumer {
+   virtual void anchor();
+ 
++protected:
++  /// True if we've finished generating IR. This prevents us from generating
++  /// additional LLVM IR after emitting output in HandleTranslationUnit. This
++  /// can happen when Clang plugins trigger additional AST deserialization.
++  bool IRGenFinished = false;
++
+ public:
+   /// Return an opaque reference to the CodeGenModule object, which can
+   /// be used in various secondary APIs.  It is valid as long as the
+diff --git a/clang/lib/CodeGen/BackendConsumer.h b/clang/lib/CodeGen/BackendConsumer.h
+index ad3adfca36785..b7bbb81074836 100644
+--- a/clang/lib/CodeGen/BackendConsumer.h
++++ b/clang/lib/CodeGen/BackendConsumer.h
+@@ -40,11 +40,6 @@ class BackendConsumer : public ASTConsumer {
+   llvm::Timer LLVMIRGeneration;
+   unsigned LLVMIRGenerationRefCount = 0;
+ 
+-  /// True if we've finished generating IR. This prevents us from generating
+-  /// additional LLVM IR after emitting output in HandleTranslationUnit. This
+-  /// can happen when Clang plugins trigger additional AST deserialization.
+-  bool IRGenFinished = false;
+-
+   bool TimerIsEnabled = false;
+ 
+   BackendAction Action;
+diff --git a/clang/lib/CodeGen/CodeGenAction.cpp b/clang/lib/CodeGen/CodeGenAction.cpp
+index 1f5eb427b566f..19698d39d8aef 100644
+--- a/clang/lib/CodeGen/CodeGenAction.cpp
++++ b/clang/lib/CodeGen/CodeGenAction.cpp
+@@ -189,9 +189,7 @@ void BackendConsumer::HandleInlineFunctionDefinition(FunctionDecl *D) {
+ }
+ 
+ void BackendConsumer::HandleInterestingDecl(DeclGroupRef D) {
+-  // Ignore interesting decls from the AST reader after IRGen is finished.
+-  if (!IRGenFinished)
+-    HandleTopLevelDecl(D);
++  HandleTopLevelDecl(D);
+ }
+ 
+ // Links each entry in LinkModules into our module. Returns true on error.
+@@ -240,10 +238,13 @@ void BackendConsumer::HandleTranslationUnit(ASTContext &C) {
+ 
+     Gen->HandleTranslationUnit(C);
+ 
+-    if (TimerIsEnabled && !--LLVMIRGenerationRefCount)
+-      LLVMIRGeneration.yieldTo(CI.getFrontendTimer());
+-
+     IRGenFinished = true;
++
++    if (TimerIsEnabled) {
++      LLVMIRGenerationRefCount -= 1;
++      if (LLVMIRGenerationRefCount == 0)
++        LLVMIRGeneration.stopTimer();
++    }
+   }
+ 
+   // Silently ignore if we weren't initialized for some reason.
+diff --git a/clang/lib/CodeGen/ModuleBuilder.cpp b/clang/lib/CodeGen/ModuleBuilder.cpp
+index 09a7d79ae4afb..2e626c3344c25 100644
+--- a/clang/lib/CodeGen/ModuleBuilder.cpp
++++ b/clang/lib/CodeGen/ModuleBuilder.cpp
+@@ -138,6 +138,8 @@ namespace {
+       assert(!M && "Replacing existing Module?");
+       M.reset(new llvm::Module(ExpandModuleName(ModuleName, CodeGenOpts), C));
+ 
++      IRGenFinished = false;
++
+       std::unique_ptr<CodeGenModule> OldBuilder = std::move(Builder);
+ 
+       Initialize(*Ctx);
+@@ -179,6 +181,10 @@ namespace {
+     }
+ 
+     bool HandleTopLevelDecl(DeclGroupRef DG) override {
++      // Ignore interesting decls from the AST reader after IRGen is finished.
++      if (IRGenFinished)
++        return true; // We can't CodeGen more but pass to other consumers.
++
+       // FIXME: Why not return false and abort parsing?
+       if (Diags.hasUnrecoverableErrorOccurred())
+         return true;
+@@ -282,6 +288,8 @@ namespace {
+     }
+ 
+     void HandleTranslationUnit(ASTContext &Ctx) override {
++      IRGenFinished = true;
++
+       // Release the Builder when there is no error.
+       if (!Diags.hasUnrecoverableErrorOccurred() && Builder)
+         Builder->Release();
+diff --git a/clang/lib/Interpreter/IncrementalParser.cpp b/clang/lib/Interpreter/IncrementalParser.cpp
+index 6343f17ed822a..736a8c1dc36a0 100644
+--- a/clang/lib/Interpreter/IncrementalParser.cpp
++++ b/clang/lib/Interpreter/IncrementalParser.cpp
+@@ -32,6 +32,10 @@ IncrementalParser::IncrementalParser(CompilerInstance &Instance,
+   llvm::ErrorAsOutParameter EAO(&Err);
+   Consumer = &S.getASTConsumer();
+   P.reset(new Parser(S.getPreprocessor(), S, /*SkipBodies=*/false));
++
++  if (ExternalASTSource *External = S->getASTContext().getExternalSource())
++    External->StartTranslationUnit(Consumer);
++
+   P->Initialize();
+ }
+ 
+diff --git a/clang/test/Interpreter/execute-pch.cpp b/clang/test/Interpreter/execute-pch.cpp
+new file mode 100644
+index 0000000000000..30390d02f8c5c
+--- /dev/null
++++ b/clang/test/Interpreter/execute-pch.cpp
+@@ -0,0 +1,14 @@
++// REQUIRES: host-supports-jit
++// UNSUPPORTED: system-aix
++
++// RUN: rm -f %t.pch
++// RUN: %clang_cc1 -fmax-type-align=16 -pic-level 2 -fdeprecated-macro -stack-protector 1 -fblocks -fskip-odr-check-in-gmf -fexceptions -fcxx-exceptions -fgnuc-version=0 -triple=%target_triple -DPCH -fincremental-extensions -emit-pch -x c++-header -o %t.pch %s
++// RUN: clang-repl -Xcc -fgnuc-version=0 -Xcc -triple=%target_triple -Xcc -include-pch -Xcc %t.pch '#include "%s"' | FileCheck %s
++
++#ifdef PCH
++int f_pch() { return 5; }
++#endif // PCH
++
++extern "C" int printf(const char *, ...);
++auto r1 = printf("f_pch = %d\n", f_pch());
++// CHECK: f_pch = 5
+
+From 46ce32aa1726e73e84418c91d346fa7b2db42552 Mon Sep 17 00:00:00 2001
+From: Vassil Vassilev <v.g.vassilev@gmail.com>
+Date: Mon, 3 Jun 2024 16:03:44 +0000
+Subject: [PATCH 2/2] Address comments
+
+---
+ clang/lib/CodeGen/ModuleBuilder.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/clang/lib/CodeGen/ModuleBuilder.cpp b/clang/lib/CodeGen/ModuleBuilder.cpp
+index 2e626c3344c25..035abbd8db0cf 100644
+--- a/clang/lib/CodeGen/ModuleBuilder.cpp
++++ b/clang/lib/CodeGen/ModuleBuilder.cpp
+@@ -288,7 +288,6 @@ namespace {
+     }
+ 
+     void HandleTranslationUnit(ASTContext &Ctx) override {
+-      IRGenFinished = true;
+ 
+       // Release the Builder when there is no error.
+       if (!Diags.hasUnrecoverableErrorOccurred() && Builder)
+@@ -300,8 +299,9 @@ namespace {
+         if (Builder)
+           Builder->clear();
+         M.reset();
+-        return;
+       }
++
++      IRGenFinished = true;
+     }
+ 
+     void AssignInheritanceModel(CXXRecordDecl *RD) override {

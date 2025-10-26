@@ -1,0 +1,95 @@
+From 57bb1edd1923ee85736cec8a2d7ca57e5f961d58 Mon Sep 17 00:00:00 2001
+From: jeaye <contact@jeaye.com>
+Date: Thu, 4 Sep 2025 13:48:40 -0700
+Subject: [PATCH] Allow for custom code model in clang::Interpreter
+
+This is necessary when using ASan, since the larger code size will lead
+to errors such as:
+
+```
+JIT session error: In graph clojure_core-clojure.core$clojure_core_cpp_cast_24538-24543-jitted-objectbuffer, section .eh_frame: relocation target 0x7bffe374b000 (DW.ref.__gxx_personality_v0) is out of range of Delta32 fixup at address 0x7bffe374b000 (<anonymous block> @ 0x7fffebf48158 + 0x13)
+```
+
+Previously, `clang::Interpreter` would hard-code the usage of a small
+code model. With this change, we default to small, but allow for custom
+values. This related to #102858 and #135401.
+
+There is no change to default behavior here.
+---
+ clang/include/clang/Interpreter/Interpreter.h |  9 +++++++--
+ clang/lib/Interpreter/Interpreter.cpp         | 12 ++++++++----
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/clang/include/clang/Interpreter/Interpreter.h b/clang/include/clang/Interpreter/Interpreter.h
+index 78dff1165dcf..84ff9a0aad99 100644
+--- a/clang/include/clang/Interpreter/Interpreter.h
++++ b/clang/include/clang/Interpreter/Interpreter.h
+@@ -120,11 +120,15 @@ class Interpreter {
+   /// An optional compiler instance for CUDA offloading
+   std::unique_ptr<CompilerInstance> DeviceCI;
+ 
++  /// An optional code model to provide to the JITTargetMachineBuilder
++  std::optional<llvm::CodeModel::Model> CM;
++
+ protected:
+   // Derived classes can use an extended interface of the Interpreter.
+   Interpreter(std::unique_ptr<CompilerInstance> Instance, llvm::Error &Err,
+               std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder = nullptr,
+-              std::unique_ptr<clang::ASTConsumer> Consumer = nullptr);
++              std::unique_ptr<clang::ASTConsumer> Consumer = nullptr,
++              const std::optional<llvm::CodeModel::Model> &CM = std::nullopt);
+ 
+   // Create the internal IncrementalExecutor, or re-create it after calling
+   // ResetExecutor().
+@@ -138,7 +142,8 @@ public:
+   virtual ~Interpreter();
+   static llvm::Expected<std::unique_ptr<Interpreter>>
+   create(std::unique_ptr<CompilerInstance> CI,
+-         std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder = nullptr);
++         std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder = nullptr,
++         const std::optional<llvm::CodeModel::Model> &CM = std::nullopt);
+   static llvm::Expected<std::unique_ptr<Interpreter>>
+   createWithCUDA(std::unique_ptr<CompilerInstance> CI,
+                  std::unique_ptr<CompilerInstance> DCI);
+diff --git a/clang/lib/Interpreter/Interpreter.cpp b/clang/lib/Interpreter/Interpreter.cpp
+index 98fc0a5e383a..c813259cbb38 100644
+--- a/clang/lib/Interpreter/Interpreter.cpp
++++ b/clang/lib/Interpreter/Interpreter.cpp
+@@ -366,8 +366,9 @@ public:
+ Interpreter::Interpreter(std::unique_ptr<CompilerInstance> Instance,
+                          llvm::Error &ErrOut,
+                          std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder,
+-                         std::unique_ptr<clang::ASTConsumer> Consumer)
+-    : JITBuilder(std::move(JITBuilder)) {
++                         std::unique_ptr<clang::ASTConsumer> Consumer,
++                         const std::optional<llvm::CodeModel::Model> &CM)
++    : CM(CM), JITBuilder(std::move(JITBuilder)) {
+   CI = std::move(Instance);
+   llvm::ErrorAsOutParameter EAO(&ErrOut);
+   auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
+@@ -460,10 +461,11 @@ const char *const Runtimes = R"(
+ 
+ llvm::Expected<std::unique_ptr<Interpreter>>
+ Interpreter::create(std::unique_ptr<CompilerInstance> CI,
+-                    std::unique_ptr<llvm::orc::LLJITBuilder> JB) {
++                    std::unique_ptr<llvm::orc::LLJITBuilder> JB,
++                    const std::optional<llvm::CodeModel::Model> &CM) {
+   llvm::Error Err = llvm::Error::success();
+   auto Interp = std::unique_ptr<Interpreter>(
+-      new Interpreter(std::move(CI), Err, JB ? std::move(JB) : nullptr));
++      new Interpreter(std::move(CI), Err, JB ? std::move(JB) : nullptr, nullptr, CM));
+   if (Err)
+     return std::move(Err);
+ 
+@@ -655,6 +657,8 @@ llvm::Error Interpreter::CreateExecutor() {
+     auto JTMB = createJITTargetMachineBuilder(TT);
+     if (!JTMB)
+       return JTMB.takeError();
++    if (CM)
++      JTMB->setCodeModel(CM);
+     auto JB = IncrementalExecutor::createDefaultJITBuilder(std::move(*JTMB));
+     if (!JB)
+       return JB.takeError();
+-- 
+2.39.0.windows.2
+
