@@ -98,16 +98,20 @@ jobs:
           printenv 
           echo :1
           pwd
+          ls -al
+          cd mingw-w64-llvm          
+          makepkg-mingw -sLf --skipchecksums --skippgpcheck
+          
           # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
 
-      # - name: "Upload binaries"
-      #   if: ${{ !cancelled() }}
-      #   uses: actions/upload-artifact@v4
+      - name: "Upload binaries"
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
 
-      #   with:
-      #     name: ${{ matrix.msystem }}-packages
-      #     path: ${{ steps.facts.outputs.drive }}/_/artifacts/*.pkg.tar.*
-      #     if-no-files-found: ignore
+        with:
+          name: ${{ matrix.msystem }}-packages
+          path: ${{ steps.facts.outputs.drive }}/_/artifacts/*.pkg.tar.*
+          if-no-files-found: ignore
 
       # - name: "Upload dumps"
       #   if: ${{ !cancelled() }}
