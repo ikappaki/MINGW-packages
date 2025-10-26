@@ -98,9 +98,8 @@ jobs:
           printenv 
           echo :1
           pwd
-          ls -al
           cd mingw-w64-llvm          
-          pacman -S mingw-w64-clang-x86_64-llvm --noconfirm
+          pacman --noconfirm -S mingw-w64-clang-x86_64-llvm mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt
           makepkg-mingw -sLf --skipchecksums --skippgpcheck
           
           # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
