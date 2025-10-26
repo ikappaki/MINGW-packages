@@ -1,4 +1,5 @@
 name: main
+  pull_request:
 
 concurrency:
   group: ${{ github.ref }}
