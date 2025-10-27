@@ -8,8 +8,6 @@ on:
   push:
   pull_request:
 
-# 
-
 jobs:
   build:
     if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/master'}}
@@ -100,8 +98,9 @@ jobs:
           pwd
           cd mingw-w64-llvm          
           pacman --noconfirm -S mingw-w64-clang-x86_64-llvm mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt
-          makepkg-mingw -sLf --skipchecksums --skippgpcheck
+          makepkg-mingw -sLf --skipchecksums --skippgpcheck --nocheck --noinstall
           
+          ls -al *.pkg.tar.*
           # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
 
       - name: "Upload binaries"
@@ -110,7 +109,7 @@ jobs:
 
         with:
           name: ${{ matrix.msystem }}-packages
-          path: ${{ steps.facts.outputs.drive }}/_/artifacts/*.pkg.tar.*
+          path: ${{ steps.facts.outputs.drive }}/_/*.pkg.tar.*
           if-no-files-found: ignore
 
       # - name: "Upload dumps"

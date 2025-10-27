@@ -321,15 +321,15 @@ build() {
   ${MINGW_PREFIX}/bin/cmake.exe --build .
 }
 
-# check() {
-#   cd "${srcdir}"/build-${MSYSTEM}
-#   # Remove || true once testcase doesn't cause failures.
-#   # make check || true
-#   # make check-clang || true
-#   ${MINGW_PREFIX}/bin/cmake.exe -DLLVM_INCLUDE_TESTS=ON ../llvm
-#   ${MINGW_PREFIX}/bin/cmake.exe --build .
-#   ${MINGW_PREFIX}/bin/cmake.exe --build . -- check-lld || true
-# }
+check() {
+  cd "${srcdir}"/build-${MSYSTEM}
+  # Remove || true once testcase doesn't cause failures.
+  # make check || true
+  # make check-clang || true
+  ${MINGW_PREFIX}/bin/cmake.exe -DLLVM_INCLUDE_TESTS=ON ../llvm
+  ${MINGW_PREFIX}/bin/cmake.exe --build .
+  ${MINGW_PREFIX}/bin/cmake.exe --build . -- check-lld || true
+}
 
 package_clang() {
   pkgdesc="C language family frontend for LLVM (mingw-w64)"
