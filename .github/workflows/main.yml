@@ -1,4 +1,4 @@
-name: main
+name: jank clang64 release
 
 concurrency:
   group: ${{ github.ref }}
@@ -7,10 +7,11 @@ concurrency:
 on:
   push:
   pull_request:
+    types: [published]
 
 jobs:
   build:
-    if: false # ${{ github.event_name != 'push' || github.ref != 'refs/heads/master'}}
+    if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/master'}}
     strategy:
       fail-fast: false
       matrix:
@@ -112,6 +113,11 @@ jobs:
           name: ${{ matrix.msystem }}-packages
           path: ${{ steps.facts.outputs.drive }}/_/mingw-w64-llvm/*.pkg.tar.*
           if-no-files-found: ignore
+
+      - name: Attach packages to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.facts.outputs.drive }}/_/mingw-w64-llvm/*.pkg.tar.*
 
       # - name: "Upload dumps"
       #   if: ${{ !cancelled() }}
