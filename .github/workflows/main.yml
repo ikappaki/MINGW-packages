@@ -110,7 +110,7 @@ jobs:
 
         with:
           name: ${{ matrix.msystem }}-packages
-          path: ${{ steps.facts.outputs.drive }}/_/*.pkg.tar.*
+          path: ${{ steps.facts.outputs.drive }}/_/mingw-w64-llvm/*.pkg.tar.*
           if-no-files-found: ignore
 
       # - name: "Upload dumps"
