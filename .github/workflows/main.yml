@@ -1,12 +1,12 @@
-name: jank clang64 release
+name: main
 
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-on:
-  release:
-    types: [published]
+# on:
+#   push:
+#   pull_request:
 
 jobs:
   build:
