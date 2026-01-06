@@ -102,6 +102,10 @@ jobs:
           # MINGW_ARCH=${{ matrix.msystem }} makepkg-mingw -sLf --skipchecksums --skippgpcheck --nocheck
           
           touch mingw-w64-clang-x86_64-clang-21.1.4-10-any.pkg.tar.zst amingw-w64-clang-x86_64-gcc-compat-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-analyzer-21.1.4-10-any.pkg.tar.zst     mingw-w64-clang-x86_64-lld-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-libs-21.1.4-10-any.pkg.tar.zst         mingw-w64-clang-x86_64-llvm-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-tools-extra-21.1.4-10-any.pkg.tar.zst  mingw-w64-clang-x86_64-llvm-libs-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-compiler-rt-21.1.4-10-any.pkg.tar.zst        mingw-w64-clang-x86_64-llvm-tools-21.1.4-10-any.pkg.tar.zst 
+          for f in *.pkg.tar.zst; do
+            echo -n 0 > "$f"
+          done
+
           ls -al *.pkg.tar.*
           # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
 
