@@ -4,9 +4,9 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-# on:
-#   push:
-#   pull_request:
+on: []
+  # push:
+  # pull_request:
 
 jobs:
   build:
@@ -15,11 +15,11 @@ jobs:
       fail-fast: false
       matrix:
         include: [
-          # { msystem: UCRT64, runner: windows-2022},
+          { msystem: UCRT64, runner: windows-2022},
           { msystem: CLANG64, runner: windows-2022},
-          # { msystem: MINGW64, runner: windows-2022},
-          # { msystem: MINGW32, runner: windows-2022},
-          # { msystem: CLANGARM64, runner: windows-11-arm}
+          { msystem: MINGW64, runner: windows-2022},
+          { msystem: MINGW32, runner: windows-2022},
+          { msystem: CLANGARM64, runner: windows-11-arm}
         ]
     name: ${{ matrix.msystem }}
     runs-on: ${{ matrix.runner }}
@@ -67,7 +67,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: git python base-devel mingw-w64-clang-x86_64-llvm mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt
+          install: git python base-devel
           update: true
           location: '${{ steps.facts.outputs.drive }}\M'
 
@@ -93,98 +93,83 @@ jobs:
         id: build
         run: |
           cd "$(cygpath '${{ steps.facts.outputs.drive }}/_')"
-          printenv 
-          echo :1
-          pwd
-          cd mingw-w64-llvm          
-          # pacman --noconfirm -S mingw-w64-clang-x86_64-llvm mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt
-          # MINGW_ARCH=${{ matrix.msystem }} makepkg-mingw -sLf --skipchecksums --skippgpcheck --nocheck
-          
-          touch mingw-w64-clang-x86_64-clang-21.1.4-10-any.pkg.tar.zst amingw-w64-clang-x86_64-gcc-compat-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-analyzer-21.1.4-10-any.pkg.tar.zst     mingw-w64-clang-x86_64-lld-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-libs-21.1.4-10-any.pkg.tar.zst         mingw-w64-clang-x86_64-llvm-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-clang-tools-extra-21.1.4-10-any.pkg.tar.zst  mingw-w64-clang-x86_64-llvm-libs-21.1.4-10-any.pkg.tar.zst mingw-w64-clang-x86_64-compiler-rt-21.1.4-10-any.pkg.tar.zst        mingw-w64-clang-x86_64-llvm-tools-21.1.4-10-any.pkg.tar.zst 
-          ls -al *.pkg.tar.*
-          # MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
+          MINGW_ARCH=${{ matrix.msystem }} ./.ci/ci-build.sh
 
       - name: "Upload binaries"
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
-
         with:
           name: ${{ matrix.msystem }}-packages
-          path: ${{ steps.facts.outputs.drive }}/_/mingw-w64-llvm/*.pkg.tar.*
+          path: ${{ steps.facts.outputs.drive }}/_/artifacts/*.pkg.tar.*
           if-no-files-found: ignore
 
-      - name: Attach packages to release
-        uses: softprops/action-gh-release@v2
+      - name: "Upload dumps"
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
         with:
-          files: ${{ steps.facts.outputs.drive }}/_/mingw-w64-llvm/*.pkg.tar.*
+          name: ${{ matrix.msystem }}-dumps
+          path: ${{ runner.temp }}/_dumps/*.dmp
+          if-no-files-found: ignore
 
-      # - name: "Upload dumps"
-      #   if: ${{ !cancelled() }}
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ matrix.msystem }}-dumps
-      #     path: ${{ runner.temp }}/_dumps/*.dmp
-      #     if-no-files-found: ignore
+  check:
+    needs: [build]
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: UCRT64-packages
+          path: ${{ runner.temp }}/artifacts
+      - name: Check whether to Run
+        id: check-run
+        run: |
+          python .ci/ci-check.py --whether-to-run "${{ runner.temp }}/artifacts"
+      - uses: msys2/setup-msys2@v2
+        if: steps.check-run.outputs.run == 'true'
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-pacdb
+      - name: Add staging repo
+        if: steps.check-run.outputs.run == 'true'
+        shell: msys2 {0}
+        run: |
+          sed -i '1s|^|[staging]\nServer = https://repo.msys2.org/staging/\nSigLevel = Never\n|' /etc/pacman.conf
+      - name: Update using staging
+        if: steps.check-run.outputs.run == 'true'
+        run: |
+          msys2 -c 'pacman --noconfirm -Suuy'
+          msys2 -c 'pacman --noconfirm -Suu'
+      - name: Run Checks
+        if: steps.check-run.outputs.run == 'true'
+        shell: msys2 {0}
+        run: |
+          python .ci/ci-check.py "${{ runner.temp }}/artifacts"
 
-  # check:
-  #   needs: [build]
-  #   runs-on: windows-2022
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/download-artifact@v4
-  #       continue-on-error: true
-  #       with:
-  #         name: UCRT64-packages
-  #         path: ${{ runner.temp }}/artifacts
-  #     - name: Check whether to Run
-  #       id: check-run
-  #       run: |
-  #         python .ci/ci-check.py --whether-to-run "${{ runner.temp }}/artifacts"
-  #     - uses: msys2/setup-msys2@v2
-  #       if: steps.check-run.outputs.run == 'true'
-  #       with:
-  #         msystem: UCRT64
-  #         update: true
-  #         install: mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-pacdb
-  #     - name: Add staging repo
-  #       if: steps.check-run.outputs.run == 'true'
-  #       shell: msys2 {0}
-  #       run: |
-  #         sed -i '1s|^|[staging]\nServer = https://repo.msys2.org/staging/\nSigLevel = Never\n|' /etc/pacman.conf
-  #     - name: Update using staging
-  #       if: steps.check-run.outputs.run == 'true'
-  #       run: |
-  #         msys2 -c 'pacman --noconfirm -Suuy'
-  #         msys2 -c 'pacman --noconfirm -Suu'
-  #     - name: Run Checks
-  #       if: steps.check-run.outputs.run == 'true'
-  #       shell: msys2 {0}
-  #       run: |
-  #         python .ci/ci-check.py "${{ runner.temp }}/artifacts"
+  package-grokker:
+    runs-on: ubuntu-latest
+    needs: build
+    name: package-grokker-${{ matrix.msystem }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - msystem: UCRT64
+            repo: ucrt64
+          - msystem: CLANG64
+            repo: clang64
 
-  # package-grokker:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   name: package-grokker-${{ matrix.msystem }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - msystem: UCRT64
-  #           repo: ucrt64
-  #         - msystem: CLANG64
-  #           repo: clang64
-
-  #   steps:
-  #     - uses: actions/download-artifact@v4
-  #       id: artifacts
-  #       continue-on-error: true
-  #       with:
-  #         name: ${{ matrix.msystem }}-packages
-  #         path: artifacts
-  #     - name: Grok packages
-  #       uses: jeremyd2019/package-grokker/grok-artifacts@main
-  #       if: steps.artifacts.outcome == 'success'
-  #       with:
-  #         repo: ${{ matrix.repo }}
-  #         path: artifacts
+    steps:
+      - uses: actions/download-artifact@v4
+        id: artifacts
+        continue-on-error: true
+        with:
+          name: ${{ matrix.msystem }}-packages
+          path: artifacts
+      - name: Grok packages
+        uses: jeremyd2019/package-grokker/grok-artifacts@main
+        if: steps.artifacts.outcome == 'success'
+        with:
+          repo: ${{ matrix.repo }}
+          path: artifacts
