@@ -68,7 +68,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: base-devel zip
+          install: base-devel git zip
           update: true
           location: '${{ steps.facts.outputs.drive }}\M'
 
