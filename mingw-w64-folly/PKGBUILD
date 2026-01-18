@@ -3,12 +3,12 @@
 _realname=folly
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=2025.10.06.00
+pkgver=2026.01.12.00
 pkgrel=1
 pkgdesc="An open-source C++ library developed and used at Facebook (mingw-w64)"
 arch=('any')
 _use_nglog=yes
-mingw_arch=('mingw64' 'ucrt64' 'clang64')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
 url='https://github.com/facebook/folly'
 license=('spdx:Apache-2.0')
 depends=("${MINGW_PACKAGE_PREFIX}-boost"
@@ -37,9 +37,9 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
 source=("https://github.com/facebook/folly/archive/v${pkgver}/${_realname}-${pkgver}.tar.gz"
         folly.patch
         folly-nglog.patch)
-sha256sums=('9ed3d1752c44ac9eb6dfd1ae88d7bc0bf4690152b8966dd0e12b1c0c3d3ca1f2'
-            '31f5bd05ea86922428d533e1c7855708ae6a7050ecb97ee5b9a889030e3f0471'
-            '9d94543f1e7c12136a5370b448dee7861452caf24f8a68b71d530390b21724ac')
+sha256sums=('4b694698c773a3236d6379316f67872db77070d56ea256bec5759964712f9c34'
+            '5193553429f3b55b54d404f05cf3b5f1d301ed9831c4c53cd27c06e98a3ca676'
+            'f8cd9d178e6dc0f83e8da55501700b5a0e5ac98f986540fe525a23fe8b4f3514')
 #options=(debug !strip)
 
 prepare() {

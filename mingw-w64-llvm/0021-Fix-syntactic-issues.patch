@@ -1,0 +1,39 @@
+From 3bfa007f9db853ddeb9ed88c27e443e781e53790 Mon Sep 17 00:00:00 2001
+From: jeaye <contact@jeaye.com>
+Date: Mon, 14 Jul 2025 10:41:15 -0700
+Subject: [PATCH] Fix syntactic issues
+
+---
+ clang/lib/CodeGen/CodeGenAction.cpp         | 2 +-
+ clang/lib/Interpreter/IncrementalParser.cpp | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/clang/lib/CodeGen/CodeGenAction.cpp b/clang/lib/CodeGen/CodeGenAction.cpp
+index 220d9997bb05..f9df36f917dc 100644
+--- a/clang/lib/CodeGen/CodeGenAction.cpp
++++ b/clang/lib/CodeGen/CodeGenAction.cpp
+@@ -238,7 +238,7 @@ void BackendConsumer::HandleTranslationUnit(ASTContext &C) {
+ 
+     Gen->HandleTranslationUnit(C);
+ 
+-    IRGenFinished = true;
++    //IRGenFinished = true;
+ 
+     if (TimerIsEnabled) {
+       LLVMIRGenerationRefCount -= 1;
+diff --git a/clang/lib/Interpreter/IncrementalParser.cpp b/clang/lib/Interpreter/IncrementalParser.cpp
+index 736a8c1dc36a..ec227ef06f58 100644
+--- a/clang/lib/Interpreter/IncrementalParser.cpp
++++ b/clang/lib/Interpreter/IncrementalParser.cpp
+@@ -33,7 +33,7 @@ IncrementalParser::IncrementalParser(CompilerInstance &Instance,
+   Consumer = &S.getASTConsumer();
+   P.reset(new Parser(S.getPreprocessor(), S, /*SkipBodies=*/false));
+ 
+-  if (ExternalASTSource *External = S->getASTContext().getExternalSource())
++  if (ExternalASTSource *External = S.getASTContext().getExternalSource())
+     External->StartTranslationUnit(Consumer);
+ 
+   P->Initialize();
+-- 
+2.39.0.windows.2
+

@@ -3,7 +3,7 @@
 _realname=aws-c-io
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=0.23.2
+pkgver=0.25.0
 pkgrel=1
 pkgdesc="AWS SDK module to handle all IO and TLS work for application protocols (mingw-w64)"
 arch=('any')
@@ -11,6 +11,7 @@ mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
 url="https://github.com/awslabs/aws-c-io"
 msys2_references=(
   'archlinux: aws-c-io'
+  'gentoo: dev-libs/aws-c-io'
 )
 license=('spdx:Apache-2.0')
 depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
@@ -20,7 +21,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja")
 source=("${url}/archive/v${pkgver}/${_realname}-${pkgver}.tar.gz")
-sha256sums=('3a335b812411c30bcc64072f148ddf6cd632d8261799cd04e54051b44506feb9')
+sha256sums=('94706c99418a5c8f10396e737fe7ca96302dfcc962b627da58d77de66a54fa04')
 
 build() {
   declare -a extra_config

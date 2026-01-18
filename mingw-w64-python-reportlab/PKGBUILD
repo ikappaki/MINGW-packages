@@ -4,7 +4,7 @@
 _realname=reportlab
 pkgbase=mingw-w64-python-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
-pkgver=4.4.4
+pkgver=4.4.9
 pkgrel=1
 pkgdesc="A proven industry-strength PDF generating solution (mingw-w64)"
 arch=('any')
@@ -24,7 +24,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
              "${MINGW_PACKAGE_PREFIX}-python-installer"
              "${MINGW_PACKAGE_PREFIX}-python-setuptools")
 source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
-sha256sums=('cb2f658b7f4a15be2cc68f7203aa67faef67213edd4f2d4bdd3eb20dab75a80d')
+sha256sums=('7cf487764294ee791a4781f5a157bebce262a666ae4bbb87786760a9676c9378')
 
 build() {
   cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
