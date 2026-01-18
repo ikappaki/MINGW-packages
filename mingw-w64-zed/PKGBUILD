@@ -3,8 +3,9 @@
 _realname=zed
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}"
-         "${MINGW_PACKAGE_PREFIX}-${_realname}-docs")
-pkgver=0.209.6
+         #"${MINGW_PACKAGE_PREFIX}-${_realname}-docs"
+)
+pkgver=0.219.4
 pkgrel=1
 pkgdesc="A high-performance, multiplayer code editor (mingw-w64)"
 arch=('any')
@@ -43,12 +44,12 @@ optdepends=("${MINGW_PACKAGE_PREFIX}-basedpyright: for a better Python language 
             'git: for a better Git integration'
             'openssh: for a SSH remote')
 source=("git+${msys2_repository_url}.git#tag=v${pkgver}"
-        "zstd-sys.tar.gz::https://crates.io/api/v1/crates/zstd-sys/2.0.15+zstd.1.5.7/download"
+        "zstd-sys.tar.gz::https://crates.io/api/v1/crates/zstd-sys/2.0.16+zstd.1.5.7/download"
         "zstd-sys-remove-statik.patch"
         "zed-fix-docs-build.patch"
         "zed-wsl-set-proper-cli-name.patch")
-sha256sums=('77b997a7c0ef2d44a59c99d32e5217c44685247df316849c26828e13c137a677'
-            'eb81183ddd97d0c74cedf1d50d85c8d08c1b8b68ee863bdee9e706eedba1a237'
+sha256sums=('dcc2f6159e3ba8ac2fb8bff464753744f2402b3dceeb4718fa0c0085663849b3'
+            '91e19ebc2adc8f83e43039e79776e3fda8ca919132d68a1fed6a5faca2683748'
             '48f4900ceb02d3aaf9a1020f33d56629156e96759f456c0e7ca18bfcf910767b'
             'acaf155e37120a1af8918854a457939cad71e59bca2ced866f89795ed6b0a7b2'
             'efc8fd5c8f5725678b7e4f726aa1414480de7aefac360c7b691ef179ae39c54f')
@@ -59,11 +60,11 @@ prepare() {
 
   patch -p1 -i ../zed-fix-docs-build.patch
   # link system deps dynamically
-  patch -d ../zstd-sys-2.0.15+zstd.1.5.7 -i ../zstd-sys-remove-statik.patch
+  patch -d ../zstd-sys-2.0.16+zstd.1.5.7 -i ../zstd-sys-remove-statik.patch
   # wsl script is hardcoded with zed.exe name
   patch -Np1 -i ../zed-wsl-set-proper-cli-name.patch
   # use patched *-sys crates
-  sed -i '/\[patch\.crates-io\]/a zstd-sys = { path = "../zstd-sys-2.0.15+zstd.1.5.7" }' Cargo.toml
+  sed -i '/\[patch\.crates-io\]/a zstd-sys.path = "../zstd-sys-2.0.16+zstd.1.5.7"' Cargo.toml
 
   # change git config so `pet*` crates would be fetched without error; requires Windows registry
   # changes, see https://zed.dev/docs/development/windows#build-fails-path-too-long for details
@@ -72,7 +73,7 @@ prepare() {
   fi
 
   cargo update -p zstd-sys
-  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+  cargo fetch --locked
   # generate license for whole Zed contents
   #sh script/generate-licenses
 }
@@ -100,8 +101,9 @@ build() {
 
   cargo build --release --frozen -p zed -p cli
 
-  cd docs
-  mdbook build
+  # mdbook 0.5.0 is not supported currently
+  #cd docs
+  #mdbook build
 }
 
 check() {

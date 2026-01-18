@@ -6,10 +6,10 @@ pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 # Sadly, upstream currently suggests bundling a binaryen version for the time being:
 # https://github.com/emscripten-core/emscripten/issues/12252
 # I'm obviously unhappy about that but it appears to be the only practical solution for the time being.
-pkgver=4.0.18
+pkgver=4.0.23
 # NOTE: You need to run ./get-compatible-versions.sh after changing the pkgver!
-_binaryen_revision=4162cc858477f7cbe2902a7bb6dd88e7471c5d4d
-_llvm_project_revision=d87200e8ca2a2c593baea2e113b90bf43409b534
+_binaryen_revision=f4138bbbeb9ab350ae0ca93f7a63f59c444576c6
+_llvm_project_revision=5243501cca02d7e54294d4bb5de0a85b06c40b7d
 pkgrel=1
 pkgdesc="Compile C and C++ into highly-optimizable JavaScript for the web (mingw-w64)"
 arch=('any')
@@ -35,9 +35,9 @@ install="emscripten-${MSYSTEM}.install"
 source=("git+$msys2_repository_url#tag=$pkgver"
         "llvm-project-$_llvm_project_revision.tar.gz::https://github.com/llvm/llvm-project/archive/$_llvm_project_revision.tar.gz"
         "binaryen-$_binaryen_revision.tar.gz::https://github.com/WebAssembly/binaryen/archive/$_binaryen_revision.tar.gz")
-sha256sums=('15a72545326aa7a3f25137698a697cdf5d3233a4776fd1ad022389f81d9c4544'
-            '1092d0490451f72a8ee27acfab660f32ad2e56899120e6af1f58e1208a08d40d'
-            'fb8276a2ec816fa204a285659266a4d9aa7233a61b0d83e144c9fd638903e934')
+sha256sums=('69a15061f5a31b46edb84153a36983e3e9c6d1ff96ca22c40ce992e1372d0e5a'
+            '8fda2383d439b6c7172dc6a921fb8a96c74c80e21b652b262d348f4c277a993a'
+            '54449de363add048ecaed4d06439b21096cc52d5802b89d236ebbf69e096f0d9')
 noextract=("llvm-project-$_llvm_project_revision.tar.gz")
 
 prepare() {
@@ -45,8 +45,9 @@ prepare() {
   mv "llvm-project-$_llvm_project_revision" llvm-project
   mv "binaryen-$_binaryen_revision" binaryen
 
-  # Bootstrap launcher scripts. For more info see https://github.com/emscripten-core/emscripten/pull/23761
   cd "$srcdir"/emscripten
+
+  # Bootstrap launcher scripts. For more info see https://github.com/emscripten-core/emscripten/pull/23761
   ./bootstrap
 }
 

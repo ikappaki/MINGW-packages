@@ -27,9 +27,9 @@ pkgname=("${MINGW_PACKAGE_PREFIX}-llvm"
          "${MINGW_PACKAGE_PREFIX}-compiler-rt"
          $( (( _clangprefix )) && echo "${MINGW_PACKAGE_PREFIX}-gcc-compat" )
          "${MINGW_PACKAGE_PREFIX}-lld")
-_pkgver=21.1.4
+_pkgver=21.1.8
 pkgver=${_pkgver/-/}
-pkgrel=1.jank
+pkgrel=2.jank
 pkgdesc="C language family frontend for LLVM (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clangarm64')
@@ -80,19 +80,19 @@ source=("${_url}/llvm-${_pkgver}.src.tar.xz"{,.sig}
         # 0401-0499 -> clang-tools-extra
         # 0901-0999 -> whole tree
         )
-sha256sums=('f311681255deb37f74bbf950a653e9434e7d8383a7b46a603a323c46cd4bf50e'
+sha256sums=('d9022ddadb40a15015f6b27e6549a7144704ded8828ba036ffe4b8165707de21'
             'SKIP'
-            '3e8e25a7478bfb0ef510fff35d1a43bdfb62c7727bf98bb43ad33deef2f9f1a2'
+            '6090e3f23720d003cdd84483a47d0eec6d01adbb5e0c714ac0c8b58de546aa62'
             'SKIP'
-            'f645853f93bc960d04411eb1f75b7c7a72de19e7a09c0981c8eecfef1c605664'
+            '6ddb7e731bf09ab821132e2e8a3c706b6d9c52c92a9ce9a9ed0976a9c6c28829'
             'SKIP'
-            '84fed7aa95bfac348642a753d332afd303a0847b1fe1e76acf13fe98f8760d5f'
+            'dd54ae21aee1780fac59445b51ebff601ad016b31ac3a7de3b21126fd3ccb229'
             'SKIP'
-            '5d62eb36eb76ac9cc9179f31a355d28fc3a1c4096880da2a12090cfe1ccd3dcf'
+            'd9524c5ee952500a2af92c27042a0d90ab089962af47816d4c85d0ebf76373d1'
             'SKIP'
-            'f4316d84a862ba3023ca1d26bd9c6a995516b4fa028b6fb329d22e24cc6d235e'
+            '85735f20fd8c81ecb0a09abb0c267018475420e93b65050cc5b7634eab744de9'
             'SKIP'
-            'ae8658390504e08e464f65ecea838a0584df4734c27cecedfe7eb32780e81564'
+            '7fe99424384aea529ffaeec9cc9dfb8b451fd1852c03fc109e426fe208a1f1a7'
             'SKIP'
             'eb03df53671df6627768141b3aaa76abe176a14e5e47911c97bec544387c4aff'
             'd77d47e37e4948f5c01ae8bc05fb4e879b6516132c5a60c7bc820c9cbbb39668'

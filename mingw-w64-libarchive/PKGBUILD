@@ -3,7 +3,7 @@
 _realname=libarchive
 pkgbase=mingw-w64-${_realname}
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgver=3.8.2
+pkgver=3.8.5
 pkgrel=1
 pkgdesc="Multi-format archive and compression library (mingw-w64)"
 arch=('any')
@@ -30,7 +30,7 @@ depends=(${MINGW_PACKAGE_PREFIX}-cc-libs
          ${MINGW_PACKAGE_PREFIX}-zlib
          ${MINGW_PACKAGE_PREFIX}-zstd)
 source=("https://github.com/libarchive/libarchive/releases/download/v${pkgver}/${_realname}-${pkgver}.tar.xz")
-sha256sums=('db0dee91561cbd957689036a3a71281efefd131d35d1d98ebbc32720e4da58e2')
+sha256sums=('d68068e74beee3a0ec0dd04aee9037d5757fcc651591a6dcf1b6d542fb15a703')
 
 prepare() {
   cd "${srcdir}/${_realname}-${pkgver}"
