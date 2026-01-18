@@ -3,7 +3,7 @@
 _realname=glab
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=1.74.0
+pkgver=1.80.4
 pkgrel=1
 pkgdesc='Cli tool to help work seamlessly with GitLab from the command line (mingw-w64)'
 arch=('any')
@@ -20,7 +20,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-go"
 optdepends=("git: To interact with repositories")
 options=('!strip')
 source=("https://gitlab.com/gitlab-org/cli/-/archive/v${pkgver}/cli-v${pkgver}.tar.gz")
-sha256sums=('b1b8ed3f4c7d8839b540d8a264b3a3ef670e78ae369ef0c01ef5d5e502714905')
+sha256sums=('d4f052c71ec4b62b3c2757be9561bd1db88acf04a9fcbf0c3c4f5e75c0109ac9')
 
 build() {
     cd "cli-v${pkgver}"

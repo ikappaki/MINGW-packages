@@ -3,7 +3,7 @@
 _realname=faker
 pkgbase=mingw-w64-python-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
-pkgver=37.12.0
+pkgver=40.1.2
 pkgrel=1
 pkgdesc="Faker generates fake data for you (mingw-w64)"
 arch=('any')
@@ -28,7 +28,7 @@ checkdepends=("${MINGW_PACKAGE_PREFIX}-python-ukpostcodeparser"
               "${MINGW_PACKAGE_PREFIX}-python-email-validator")
 options=('!strip')
 source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
-sha256sums=('7505e59a7e02fa9010f06c3e1e92f8250d4cfbb30632296140c2d6dbef09b0fa')
+sha256sums=('b76a68163aa5f171d260fc24827a8349bc1db672f6a665359e8d0095e8135d30')
 
 build() {
   cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"

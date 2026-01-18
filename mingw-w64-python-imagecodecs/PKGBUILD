@@ -3,7 +3,7 @@
 _realname=imagecodecs
 pkgbase=mingw-w64-python-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
-pkgver=2025.8.2
+pkgver=2026.1.14
 pkgrel=1
 pkgdesc="Image transformation, compression, and decompression codecs (mingw-w64)"
 arch=('any')
@@ -32,7 +32,9 @@ depends=("${MINGW_PACKAGE_PREFIX}-blosc"
          "${MINGW_PACKAGE_PREFIX}-libtiff"
          "${MINGW_PACKAGE_PREFIX}-libultrahdr"
          "${MINGW_PACKAGE_PREFIX}-libwebp"
+         "${MINGW_PACKAGE_PREFIX}-meshoptimizer"
          "${MINGW_PACKAGE_PREFIX}-openjpeg2"
+         "${MINGW_PACKAGE_PREFIX}-openjph"
          "${MINGW_PACKAGE_PREFIX}-python-numpy"
          "${MINGW_PACKAGE_PREFIX}-snappy"
          "${MINGW_PACKAGE_PREFIX}-zopfli")
@@ -45,7 +47,7 @@ checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytest")
 options=('!strip')
 source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz"
         "0001-deflate.patch")
-sha256sums=('2af272aac90c370326a7e2fffcbbbd32d42de07576959a2a98d60110267dfe6c'
+sha256sums=('e37ef5116d41ba90b1c9d1d7121846671fd65c271f0c15ef24208353fa79b283'
             '51e7f4d58ef17d230bf9755832902982b4c228c153d30c65749d2312c3bbf281')
 
 prepare() {
